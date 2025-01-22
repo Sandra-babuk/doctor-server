@@ -1,95 +1,72 @@
-const validator = require('validator');
 const doctors = require('../model/doctorModel');
-const bcrypt = require('bcrypt')
-const { v2: cloudinary } = require('cloudinary');
-const jwt = require('jsonwebtoken')
 
-
-
-// admin login
-
+// Admin Login 
 exports.adminLoginController = async (req, res) => {
-  console.log('inside adminLoginController');
+  console.log('Inside adminLoginController');
 
   try {
     const { email, password } = req.body;
-
     if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
-      const token = jwt.sign({ email, password }, process.env.JWT_PASSWORD);
-      res.status(200).json({ message: 'Login successful', token });
+
+      res.json({ success: true, message: 'Login successful' });
     } else {
-      res.status(404).json({ message: 'Invalid email or password' });
+      res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
-  } catch (err) {
-    res.status(401).json({ error: err.message });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
+// Add Doctor 
+exports.addDoctorController = async (req, res) => {
+  console.log("Inside addDoctorController");
 
-// add doctor 
-exports.adminAddController = async (req,res) =>{
-  console.log("inside adminAddController ");
+  const { name, email, password,image, speciality, degree, experience, about, fees, address } = req.body;
+
+  // Log the values to verify data
+  console.log({ name, email, password,image, speciality, degree, experience, about, fees, address });
+
+ 
 
   try {
-    const {name,email,password,speciality,degree,experience,about,fees,address} = req.body
-    const imageFile = req.imageFile
-
-    console.log({name,email,password,speciality,degree,experience,about,fees,address},imageFile);
-
-    // all data required
-    if(!name || !email || !password || !speciality || !degree || !experience || !about || !fees || !address ){
-      return res.json({success:false,message:"all fields required"})
+    // doctor already
+    const existingDoctor = await doctors.findOne({ email });
+    if (existingDoctor) {
+      return res.status(406).json("Doctor already exists in our database. Please add another.");
     }
 
-    // validating email
-    if(!validator.isEmail(email)){
-      return res.json({success:false,message:"please enter a valid email"})
-    }
-
-    // password
-    if (password.length < 8){
-      return res.json({success:false,message:"please enter a strong password"})
-
-    }
-    // hashing password 
-    const salt = await bcrypt.genSalt(10)
-    const hashedPassword = await bcrypt.hash(password,salt)
-
-    // upload image to cloud
-    const imageUpload =  await cloudinary.uploader.upload(imageFile.path, {resource_type:"image"})
-    const imageUrl = imageUpload.secure_url
-
-    const doctorData ={
+    // new doctor 
+    const newDoctor = new doctors({
       name,
       email,
-      Image:imageUrl,
-      password:hashedPassword,
+      password,
+      image, 
       speciality,
       degree,
       experience,
       about,
       fees,
-      address:JSON.parse(address),
-      date:Date.now()
-    }
+      address,
+      date: Date.now(), 
+    });
 
-    const newDoctor = new doctorModel(doctorData)
-    await newDoctor.save()
-
-    res.json({success:true,message:"Doctor added"})
-
-
-    
-  } catch (error) {
-    console.log(error);
-    res.json({success:false,message:error.message})
-    
-    
+    // Save
+    await newDoctor.save();
+    res.status(200).json(newDoctor); 
+  } catch (err) {
+    console.error(err); 
+    res.status(500).json({ error: 'Internal server error', details: err });
   }
-  
+};
+
+// Get all doctors
+exports.getAllDoctor = async (req,res)=>{
+  console.log("Inside getUserProjectController");
+  try {
+      const allDoctors = await doctors.find({})
+      res.status(200).json(allDoctors)
+  } catch (err) {
+      res.status(401).json(err)
+  }
 }
-
-
-
-
-

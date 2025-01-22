@@ -1,24 +1,26 @@
-require('dotenv').config();
+require('dotenv').config(); // Load environment variables from .env file
 const express = require('express');
 const cors = require('cors');
-require('./connection/dbConnection'); 
-const adminRouter = require('./router/adminRouter'); 
+const path = require('path'); // To handle file paths correctly
+require('./connection/dbConnection'); // Make sure your database connection is correctly configured
+const adminRouter = require('./router/adminRouter'); // Import the admin router
 
 const doctorServer = express();
 
-// Middlewares
-doctorServer.use(cors());
-doctorServer.use(express.json());
-doctorServer.use('/admin', adminRouter);
-doctorServer.use('/uploads', express.static('./uploads')); 
+// Middleware setup
+doctorServer.use(cors()); // Enable CORS for all routes
+doctorServer.use(express.json()); // Parse incoming JSON requests
+doctorServer.use('/admin', adminRouter); // Mount the adminRouter at '/admin'
+doctorServer.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // Serve static files (uploaded images)
 
+// Root route (testing server)
 doctorServer.get("/", (req, res) => {
   res.status(200).send("<h1>Hello from Doctor Server</h1>");
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000; // Port setup (using .env if available)
 
-// Start the server
+// Start the server and listen on the configured port
 doctorServer.listen(PORT, () => {
-  console.log(`doctorServer started at PORT: ${PORT} and waiting for the client request...`);
+  console.log(`Doctor server started at PORT: ${PORT} and waiting for client requests...`);
 });

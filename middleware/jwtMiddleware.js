@@ -1,27 +1,27 @@
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
 
-// admin authAdmin
-const authAdmin = async(req,res,next)=>{
-    try {
-        
-        const {admToken} = req.headers
-        if (!admToken){
-            return res.json({success:false,message:'Not authorised Login Again'})
+// middleware
+const jwtMiddleware = (req, res, next) => {
+    console.log("Inside jwtMiddleware");
 
+    // get token from the 'Authorization' header
+    const token = req.headers["authorization"]?.split(" ")[1];
+    console.log(token);
+
+    // verify token
+    if (token) {
+        try {
+            const jwtResponse = jwt.verify(token, process.env.JWT_PASSWORD);
+            console.log(jwtResponse);
+            req.userId = jwtResponse.userId;
+            next();
+        } catch (error) {
+            console.error("JWT Verification Error:", error);
+            res.status(401).json("Please login to proceed... Authentication failed.");
         }
-        const token_decode = jwt.verify(admToken,process.env.JWT_PASSWORD)
-
-        if(token_decode !== process.env.ADMIN_EMAIL + process.env.ADMIN_PASSWORD){
-            return res.json({success:false,message:'Not authorised Login Again'})
-        }
-
-        next()
-
-    } catch (error) {
-        console.log(error);
-        res.json({success:false,message:error.message})
-        
+    } else {
+        res.status(406).json("Authentication failed... token missing");
     }
-}
+};
 
-module.exports = authAdmin;
+module.exports = jwtMiddleware;
