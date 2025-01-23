@@ -1,5 +1,6 @@
 const express = require('express');
 const adminController = require('../controller/adminController');
+const doctorController = require('../controller/doctorController')
 
 const adminRouter = new express.Router();
 
@@ -10,5 +11,7 @@ adminRouter.post('/admin-login', adminController.adminLoginController);
 adminRouter.post('/add-doctor', adminController.addDoctorController);
 // get doctor
 adminRouter.get('/get-doctor',adminController.getAllDoctor)
+// Update availability route
+adminRouter.post('/update-availability', doctorController.doctorAvailability); 
 
 module.exports = adminRouter;

@@ -62,7 +62,7 @@ exports.addDoctorController = async (req, res) => {
 
 // Get all doctors
 exports.getAllDoctor = async (req,res)=>{
-  console.log("Inside getUserProjectController");
+  console.log("Inside getAllDoctor");
   try {
       const allDoctors = await doctors.find({})
       res.status(200).json(allDoctors)
